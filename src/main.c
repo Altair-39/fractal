@@ -124,7 +124,7 @@ void render(SDL_Renderer *renderer) {
   int samples = 2;
   double invSamples = 1.0 / (samples * samples);
 
-#pragma omp parallel for collapse(2)
+#pragma omp parallel for collapse(2) schedule(dynamic)
   for (int px = 0; px < WIDTH; px++) {
     for (int py = 0; py < HEIGHT; py++) {
       double rSum = 0, gSum = 0, bSum = 0;
