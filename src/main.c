@@ -1,4 +1,5 @@
 #include <SDL2/SDL.h>
+#include <omp.h>
 #include <stdio.h>
 
 /*
@@ -123,6 +124,7 @@ void render(SDL_Renderer *renderer) {
   int samples = 2;
   double invSamples = 1.0 / (samples * samples);
 
+#pragma omp parallel for collapse(2) schedule(dynamic)
   for (int px = 0; px < WIDTH; px++) {
     for (int py = 0; py < HEIGHT; py++) {
       double rSum = 0, gSum = 0, bSum = 0;
@@ -153,8 +155,11 @@ void render(SDL_Renderer *renderer) {
       int g = (int)(gSum * invSamples);
       int b = (int)(bSum * invSamples);
 
-      SDL_SetRenderDrawColor(renderer, r, g, b, 255);
-      SDL_RenderDrawPoint(renderer, px, py);
+#pragma omp critical
+      { // SDL is not thread-safe, so wrap this in a critical section
+        SDL_SetRenderDrawColor(renderer, r, g, b, 255);
+        SDL_RenderDrawPoint(renderer, px, py);
+      }
     }
   }
 
