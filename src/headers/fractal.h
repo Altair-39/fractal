@@ -11,6 +11,10 @@ typedef enum {
   FRACTAL_SIERPINSKY,
 } FractalType;
 
-int getFractalValue(FractalType currentFractal, double x, double y);
+typedef int (*FractalFunc)(double, double);
+
+void assignFractal(FractalType currentFractal);
+
+int getFractalValue(double x, double y);
 
 #endif // !FRACTAL_H

@@ -9,7 +9,6 @@
 double zoom = 1.0;
 double offsetX = -0.5;
 double offsetY = 0.0;
-extern FractalType currentFractal;
 
 /*
  * Create the texture
@@ -25,18 +24,24 @@ SDL_Texture *create_texture(SDL_Renderer *renderer) {
  */
 
 void render(SDL_Renderer *renderer, SDL_Texture *texture) {
-  int samples = 2;
-  double invSamples = 1.0 / (samples * samples);
+  const int samples = 2;
+  const double invSamples = 1.0 / (samples * samples);
+  const double invWidth = 4.0 / WIDTH;
+  const double halfWidth = WIDTH / 2.0;
+  const double halfHeight = HEIGHT / 2.0;
 
-  Uint32 *pixels = malloc(WIDTH * HEIGHT * sizeof(Uint32));
-  if (!pixels) {
-    fprintf(stderr, "Failed to allocate pixel buffer\n");
+  void *pixels;
+  int pitch;
+
+  if (SDL_LockTexture(texture, NULL, &pixels, &pitch) != 0) {
+    fprintf(stderr, "SDL_LockTexture failed: %s\n", SDL_GetError());
     return;
   }
 
 #pragma omp parallel for collapse(2) schedule(dynamic)
-  for (int px = 0; px < WIDTH; px++) {
-    for (int py = 0; py < HEIGHT; py++) {
+  for (int py = 0; py < HEIGHT; py++) {
+    Uint32 *row = (Uint32 *)((Uint8 *)pixels + py * pitch);
+    for (int px = 0; px < WIDTH; px++) {
       double rSum = 0, gSum = 0, bSum = 0;
 
       for (int sx = 0; sx < samples; sx++) {
@@ -44,15 +49,15 @@ void render(SDL_Renderer *renderer, SDL_Texture *texture) {
           double subX = px + (sx + 0.5) / samples;
           double subY = py + (sy + 0.5) / samples;
 
-          double x0 = ((subX - WIDTH / 2.0) * 4.0 / WIDTH) * zoom + offsetX;
-          double y0 = ((subY - HEIGHT / 2.0) * 4.0 / WIDTH) * zoom + offsetY;
+          double x0 = ((subX - halfWidth) * invWidth) * zoom + offsetX;
+          double y0 = ((subY - halfHeight) * invWidth) * zoom + offsetY;
 
-          int value = getFractalValue(currentFractal, x0, y0);
+          int value = getFractalValue(x0, y0);
 
           if (value != MAX_ITER) {
-            rSum += (value * 9) % 256;
-            gSum += (value * 2) % 256;
-            bSum += (value * 5) % 256;
+            rSum += (value * 9) & 0xFF;
+            gSum += (value * 2) & 0xFF;
+            bSum += (value * 5) & 0xFF;
           }
         }
       }
@@ -61,17 +66,16 @@ void render(SDL_Renderer *renderer, SDL_Texture *texture) {
       int g = (int)(gSum * invSamples);
       int b = (int)(bSum * invSamples);
 
-      Uint32 color = (255 << 24) | (r << 16) | (g << 8) | b;
-      pixels[py * WIDTH + px] = color;
+      Uint32 color = (255 << 24) | (b << 16) | (g << 8) | r;
+
+      row[px] = color;
     }
   }
 
-  SDL_UpdateTexture(texture, NULL, pixels, WIDTH * sizeof(Uint32));
+  SDL_UnlockTexture(texture);
   SDL_RenderClear(renderer);
   SDL_RenderCopy(renderer, texture, NULL, NULL);
   SDL_RenderPresent(renderer);
-
-  free(pixels);
 }
 
 /*

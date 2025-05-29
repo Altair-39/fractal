@@ -1,5 +1,8 @@
 #include "headers/fractal.h"
 #include <math.h>
+#include <string.h>
+
+FractalFunc fractalFn;
 
 /* Julia constant */
 
@@ -22,8 +25,10 @@ static int mandelbrot(double x, double y) {
   return n;
 }
 
-static int julia(double x, double y, double cr, double ci) {
+static int julia(double x, double y) {
   int n = 0;
+  double ci = juliaCi;
+  double cr = juliaCr;
   while (x * x + y * y <= 4.0 && n < MAX_ITER) {
     double tmp = x * x - y * y + cr;
     y = 2.0 * x * y + ci;
@@ -88,21 +93,29 @@ static int sierpinskiCarpet(double x, double y) {
   return MAX_ITER;
 }
 
-int getFractalValue(FractalType currentFractal, double x, double y) {
+void assignFractal(FractalType currentFractal) {
   switch (currentFractal) {
   case FRACTAL_MANDELBROT:
-    return mandelbrot(x, y);
-  case FRACTAL_JULIA:
-    return julia(x, y, juliaCr, juliaCi);
+    fractalFn = mandelbrot;
+    break;
   case FRACTAL_TRICORN:
-    return tricorn_set(x, y);
+    fractalFn = tricorn_set;
+    break;
   case FRACTAL_MULTIBROT:
-    return multibrot3(x, y);
+    fractalFn = multibrot3;
+    break;
   case FRACTAL_BURNINGSHIP:
-    return burningShip(x, y);
+    fractalFn = burningShip;
+    break;
   case FRACTAL_SIERPINSKY:
-    return sierpinskiCarpet(x, y);
+    fractalFn = sierpinskiCarpet;
+    break;
+  case FRACTAL_JULIA:
+    fractalFn = julia;
+    break;
   default:
-    return 0;
+    fractalFn = NULL;
   }
 }
+
+inline int getFractalValue(double x, double y) { return fractalFn(x, y); }

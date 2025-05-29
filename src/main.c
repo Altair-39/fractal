@@ -1,7 +1,7 @@
-#include <SDL2/SDL.h>
-#include <stdio.h>
 #include "./headers/fractal.h"
 #include "./headers/rendering.h"
+#include <SDL2/SDL.h>
+#include <stdio.h>
 
 FractalType currentFractal = FRACTAL_MANDELBROT;
 
@@ -37,6 +37,8 @@ int main() {
     printf("Invalid selection.\n");
     return 1;
   }
+
+  assignFractal(currentFractal);
 
   SDL_Init(SDL_INIT_VIDEO);
   SDL_Window *window =
