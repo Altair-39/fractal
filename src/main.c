@@ -24,6 +24,7 @@ typedef enum {
   FRACTAL_TRICORN,
   FRACTAL_MULTIBROT,
   FRACTAL_BURNINGSHIP,
+  FRACTAL_SIERPINSKY,
 } FractalType;
 
 FractalType currentFractal = FRACTAL_MANDELBROT;
@@ -37,42 +38,42 @@ double juliaCi = 0.27015;
  * Fractal Functions
  */
 
-int mandelbrot(double cr, double ci) {
+int mandelbrot(double x, double y) {
   double zr = 0, zi = 0;
   int n = 0;
   while (zr * zr + zi * zi <= 4.0 && n < MAX_ITER) {
-    double tmp = zr * zr - zi * zi + cr;
-    zi = 2.0 * zr * zi + ci;
+    double tmp = zr * zr - zi * zi + x;
+    zi = 2.0 * zr * zi + y;
     zr = tmp;
     n++;
   }
   return n;
 }
 
-int julia(double zr, double zi, double cr, double ci) {
+int julia(double x, double y, double cr, double ci) {
   int n = 0;
-  while (zr * zr + zi * zi <= 4.0 && n < MAX_ITER) {
-    double tmp = zr * zr - zi * zi + cr;
-    zi = 2.0 * zr * zi + ci;
-    zr = tmp;
+  while (x * x + y * y <= 4.0 && n < MAX_ITER) {
+    double tmp = x * x - y * y + cr;
+    y = 2.0 * x * y + ci;
+    x = tmp;
     n++;
   }
   return n;
 }
 
-int tricorn_set(double zr, double zi) {
+int tricorn_set(double x, double y) {
   int n = 0;
-  double pi = zi, pr = zr;
-  while (zr * zr + zi * zi <= 4 && n < MAX_ITER) {
-    double tmp = -2 * zr * zi + pi;
-    zr = zr * zr - zi * zi + pr;
-    zi = tmp;
+  double pi = y, pr = x;
+  while (x * x + y * y <= 4 && n < MAX_ITER) {
+    double tmp = -2 * x * y + pi;
+    x = x * x - y * y + pr;
+    y = tmp;
     n++;
   }
   return n;
 }
 
-int multibrot3(double cr, double ci) {
+int multibrot3(double x, double y) {
   double zr = 0, zi = 0;
   int n = 0;
   while (zr * zr + zi * zi <= 4.0 && n < MAX_ITER) {
@@ -80,23 +81,39 @@ int multibrot3(double cr, double ci) {
     double zi2 = zi * zi;
     double zr3 = zr * (zr2 - 3 * zi2);
     double zi3 = zi * (3 * zr2 - zi2);
-    zr = zr3 + cr;
-    zi = zi3 + ci;
+    zr = zr3 + x;
+    zi = zi3 + y;
     n++;
   }
   return n;
 }
 
-int burningShip(double cr, double ci) {
+int burningShip(double x, double y) {
   double zr = 0, zi = 0;
   int n = 0;
   while (zr * zr + zi * zi <= 4.0 && n < MAX_ITER) {
-    double tmp = zr * zr - zi * zi + cr;
-    zi = fabs(2.0 * zr * zi) + ci;
+    double tmp = zr * zr - zi * zi + x;
+    zi = fabs(2.0 * zr * zi) + y;
     zr = fabs(tmp);
     n++;
   }
   return n;
+}
+
+int sierpinskiCarpet(double x, double y) {
+  x = (x + 1.0) / 2.0;
+  y = (y + 1.0) / 2.0;
+
+  int level = 0;
+  while (x > 0 && y > 0 && level < MAX_ITER) {
+    if ((int)(x * 3) % 3 == 1 && (int)(y * 3) % 3 == 1) {
+      return level;
+    }
+    x *= 3;
+    y *= 3;
+    level++;
+  }
+  return MAX_ITER;
 }
 
 int getFractalValue(double x, double y) {
@@ -111,6 +128,8 @@ int getFractalValue(double x, double y) {
     return multibrot3(x, y);
   case FRACTAL_BURNINGSHIP:
     return burningShip(x, y);
+  case FRACTAL_SIERPINSKY:
+    return sierpinskiCarpet(x, y);
   default:
     return 0;
   }
@@ -210,6 +229,7 @@ int main() {
   printf("3 = Tricorn\n");
   printf("4 = Multibrot\n");
   printf("5 = Burning Ship\n");
+  printf("6 = Sierpinski Carpet\n");
   int choice;
   if (scanf("%d", &choice) != 1) {
     printf("Invalid input.\n");
@@ -226,6 +246,8 @@ int main() {
     currentFractal = FRACTAL_MULTIBROT;
   } else if (choice == 5) {
     currentFractal = FRACTAL_BURNINGSHIP;
+  } else if (choice == 6) {
+    currentFractal = FRACTAL_SIERPINSKY;
   } else {
     printf("Invalid selection.\n");
     return 1;
