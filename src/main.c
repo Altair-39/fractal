@@ -15,6 +15,7 @@ int main() {
   printf("4 = Multibrot\n");
   printf("5 = Burning Ship\n");
   printf("6 = Sierpinski Carpet\n");
+  printf("7 = Newton\n");
   int choice;
   if (scanf("%d", &choice) != 1) {
     printf("Invalid input.\n");
@@ -33,6 +34,8 @@ int main() {
     currentFractal = FRACTAL_BURNINGSHIP;
   } else if (choice == 6) {
     currentFractal = FRACTAL_SIERPINSKY;
+  } else if (choice == 7) {
+    currentFractal = FRACTAL_NEWTON;
   } else {
     printf("Invalid selection.\n");
     return 1;

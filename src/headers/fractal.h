@@ -9,6 +9,7 @@ typedef enum {
   FRACTAL_MULTIBROT,
   FRACTAL_BURNINGSHIP,
   FRACTAL_SIERPINSKY,
+  FRACTAL_NEWTON,
 } FractalType;
 
 typedef int (*FractalFunc)(double, double);

@@ -93,6 +93,41 @@ static int sierpinskiCarpet(double x, double y) {
   return MAX_ITER;
 }
 
+
+static int newton(double x, double y) {
+  int n = 0;
+  double tolerance = 1e-6;
+  double zr = x;
+  double zi = y;
+
+  while (n < MAX_ITER) {
+    double r2 = zr * zr, i2 = zi * zi;
+    double r3 = r2 * zr - 3 * zr * i2;
+    double i3 = 3 * r2 * zi - zi * i2;
+
+    double fr = r3 - 1;
+    double fi = i3;
+
+    double dr = 3 * (zr * zr - zi * zi);
+    double di = 6 * zr * zi;
+
+    double denom = dr * dr + di * di;
+    if (denom == 0.0) break; 
+
+    double new_zr = zr - (fr * dr + fi * di) / denom;
+    double new_zi = zi - (fi * dr - fr * di) / denom;
+
+    if (fabs(new_zr - zr) < tolerance && fabs(new_zi - zi) < tolerance)
+      break;
+
+    zr = new_zr;
+    zi = new_zi;
+    n++;
+  }
+
+  return n;
+}
+
 void assignFractal(FractalType currentFractal) {
   switch (currentFractal) {
   case FRACTAL_MANDELBROT:
@@ -112,6 +147,9 @@ void assignFractal(FractalType currentFractal) {
     break;
   case FRACTAL_JULIA:
     fractalFn = julia;
+    break;
+  case FRACTAL_NEWTON:
+    fractalFn = newton;
     break;
   default:
     fractalFn = NULL;
