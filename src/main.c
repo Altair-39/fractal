@@ -1,11 +1,10 @@
 #include "./headers/fractal.h"
 #include "./headers/rendering.h"
+#include "./headers/config.h"
 #include <SDL2/SDL.h>
 #include <stdio.h>
 
 FractalType currentFractal = FRACTAL_MANDELBROT;
-
-/* Main */
 
 int main() {
   printf("Choose a fractal to render:\n");
@@ -21,8 +20,12 @@ int main() {
     printf("Invalid input.\n");
     return 1;
   }
+  ColorConfig color_config = {6, 1, 4, 1, 2,1}; 
 
-  init_palette();
+      if (!read_color_config(&color_config)) {
+        printf("Using default color configuration\n");
+    }
+  init_palette(color_config);
 
   if (choice == 1) {
     currentFractal = FRACTAL_MANDELBROT;
