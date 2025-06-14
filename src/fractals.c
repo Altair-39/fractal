@@ -14,37 +14,56 @@ double juliaCi = 0.27015;
  */
 
 static int mandelbrot(double x, double y) {
+  double q = (x - 0.25) * (x - 0.25) + y * y;
+  if (q * (q + (x - 0.25)) <= 0.25 * y * y ||
+      ((x + 1) * (x + 1) + y * y <= 0.0625))
+    return MAX_ITER;
+
   double zr = 0, zi = 0;
   int n = 0;
-  while (zr * zr + zi * zi <= 4.0 && n < MAX_ITER) {
-    double tmp = zr * zr - zi * zi + x;
+  while (n < MAX_ITER) {
+    double zr2 = zr * zr;
+    double zi2 = zi * zi;
+    if (zr2 + zi2 > 4.0)
+      break;
     zi = 2.0 * zr * zi + y;
-    zr = tmp;
+    zr = zr2 - zi2 + x;
     n++;
   }
   return n;
 }
 
 static int julia(double x, double y) {
+  const double ci = juliaCi;
+  const double cr = juliaCr;
   int n = 0;
-  double ci = juliaCi;
-  double cr = juliaCr;
-  while (x * x + y * y <= 4.0 && n < MAX_ITER) {
-    double tmp = x * x - y * y + cr;
+
+  while (n < MAX_ITER) {
+    const double x2 = x * x;
+    const double y2 = y * y;
+    if (x2 + y2 > 4.0)
+      break;
+
     y = 2.0 * x * y + ci;
-    x = tmp;
+    x = x2 - y2 + cr;
     n++;
   }
   return n;
 }
 
 static int tricorn_set(double x, double y) {
+  const double pr = x;
+  const double pi = y;
   int n = 0;
-  double pi = y, pr = x;
-  while (x * x + y * y <= 4 && n < MAX_ITER) {
-    double tmp = -2 * x * y + pi;
-    x = x * x - y * y + pr;
-    y = tmp;
+
+  while (n < MAX_ITER) {
+    const double x2 = x * x;
+    const double y2 = y * y;
+    if (x2 + y2 > 4.0)
+      break;
+
+    y = -2.0 * x * y + pi;
+    x = x2 - y2 + pr;
     n++;
   }
   return n;
@@ -53,13 +72,16 @@ static int tricorn_set(double x, double y) {
 static int multibrot3(double x, double y) {
   double zr = 0, zi = 0;
   int n = 0;
-  while (zr * zr + zi * zi <= 4.0 && n < MAX_ITER) {
-    double zr2 = zr * zr;
-    double zi2 = zi * zi;
-    double zr3 = zr * (zr2 - 3 * zi2);
-    double zi3 = zi * (3 * zr2 - zi2);
-    zr = zr3 + x;
-    zi = zi3 + y;
+
+  while (n < MAX_ITER) {
+    const double zr2 = zr * zr;
+    const double zi2 = zi * zi;
+
+    if (zr2 + zi2 > 4.0)
+      break;
+
+    zr = zr * (zr2 - 3 * zi2) + x;
+    zi = zi * (3 * zr2 - zi2) + y;
     n++;
   }
   return n;
@@ -93,7 +115,6 @@ static int sierpinskiCarpet(double x, double y) {
   return MAX_ITER;
 }
 
-
 static int newton(double x, double y) {
   int n = 0;
   double tolerance = 1e-6;
@@ -112,7 +133,8 @@ static int newton(double x, double y) {
     double di = 6 * zr * zi;
 
     double denom = dr * dr + di * di;
-    if (denom == 0.0) break; 
+    if (denom == 0.0)
+      break;
 
     double new_zr = zr - (fr * dr + fi * di) / denom;
     double new_zi = zi - (fi * dr - fr * di) / denom;

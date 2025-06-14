@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -Wall -Wextra -O3 -fopenmp -march=native -ffast-math -fno-trapping-math $(shell sdl2-config --cflags)
+CFLAGS = -Wall -Wextra -O3 -fopenmp -march=native -ffast-math -ffp-contract=fast -fno-trapping-math $(shell sdl2-config --cflags)
 LDFLAGS = $(shell sdl2-config --libs) -fopenmp
 
 SRC_DIR = src

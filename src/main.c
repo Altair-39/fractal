@@ -22,6 +22,8 @@ int main() {
     return 1;
   }
 
+  init_palette();
+
   if (choice == 1) {
     currentFractal = FRACTAL_MANDELBROT;
   } else if (choice == 2) {

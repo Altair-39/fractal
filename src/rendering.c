@@ -2,6 +2,7 @@
 #include "./headers/fractal.h"
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_render.h>
+#include <string.h>
 /*
  * Globals
  */
@@ -9,6 +10,19 @@
 double zoom = 1.0;
 double offsetX = -0.5;
 double offsetY = 0.0;
+
+Uint32 *colorPalette = NULL;
+
+void init_palette() {
+    if (colorPalette) free(colorPalette);
+    colorPalette = malloc(MAX_ITER * sizeof(Uint32));
+    for (int i = 0; i < MAX_ITER; i++) {
+        int r = (i * 9) & 0xFF;
+        int g = (i * 2) & 0xFF;
+        int b = (i * 5) & 0xFF;
+        colorPalette[i] = (0xFF000000) | (b << 16) | (g << 8) | r;
+    }
+}
 
 /*
  * Create the texture
@@ -24,51 +38,40 @@ SDL_Texture *create_texture(SDL_Renderer *renderer) {
  */
 
 void render(SDL_Renderer *renderer, SDL_Texture *texture) {
-  const int samples = 2;
-  const double invSamples = 1.0 / (samples * samples);
   const double invWidth = 4.0 / WIDTH;
   const double halfWidth = WIDTH / 2.0;
   const double halfHeight = HEIGHT / 2.0;
 
   void *pixels;
   int pitch;
+  Uint32 *colorPalette = malloc(MAX_ITER * sizeof(Uint32));
+  for (int i = 0; i < MAX_ITER; i++) {
+    int r = (i * 9) & 0xFF;
+    int g = (i * 2) & 0xFF;
+    int b = (i * 5) & 0xFF;
+    colorPalette[i] = (255 << 24) | (b << 16) | (g << 8) | r;
+  }
 
   if (SDL_LockTexture(texture, NULL, &pixels, &pitch) != 0) {
     fprintf(stderr, "SDL_LockTexture failed: %s\n", SDL_GetError());
     return;
   }
 
-#pragma omp parallel for collapse(2) schedule(dynamic)
+  const double zoomedInvWidth = invWidth * zoom;
+  const double zoomOffsetX = offsetX - halfWidth * zoomedInvWidth;
+
+#pragma omp parallel for schedule(dynamic, 16) collapse(2)
   for (int py = 0; py < HEIGHT; py++) {
     Uint32 *row = (Uint32 *)((Uint8 *)pixels + py * pitch);
+
+    const double y_base = (py - halfHeight) * zoomedInvWidth + offsetY;
+
     for (int px = 0; px < WIDTH; px++) {
-      double rSum = 0, gSum = 0, bSum = 0;
+      double x0 = px * zoomedInvWidth + zoomOffsetX;
+      double y0 = y_base;
 
-      for (int sx = 0; sx < samples; sx++) {
-        for (int sy = 0; sy < samples; sy++) {
-          double subX = px + (sx + 0.5) / samples;
-          double subY = py + (sy + 0.5) / samples;
-
-          double x0 = ((subX - halfWidth) * invWidth) * zoom + offsetX;
-          double y0 = ((subY - halfHeight) * invWidth) * zoom + offsetY;
-
-          int value = getFractalValue(x0, y0);
-
-          if (value != MAX_ITER) {
-            rSum += (value * 9) & 0xFF;
-            gSum += (value * 2) & 0xFF;
-            bSum += (value * 5) & 0xFF;
-          }
-        }
-      }
-
-      int r = (int)(rSum * invSamples);
-      int g = (int)(gSum * invSamples);
-      int b = (int)(bSum * invSamples);
-
-      Uint32 color = (255 << 24) | (b << 16) | (g << 8) | r;
-
-      row[px] = color;
+      int value = getFractalValue(x0, y0);
+      row[px] = colorPalette[value];
     }
   }
 
