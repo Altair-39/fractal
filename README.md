@@ -1,2 +1,2 @@
-# fractal
-Some fractal implementation in C
+# MOVED
+Now you can find this on https://codeberg.org/altair-39/fractal
